@@ -61,12 +61,12 @@ except:
 def get_user_tweets(user):
 	if user in CACHE_DICTION:
 		print("Data was in the cache")
-		return CAHCE_DICTION[user]
+		return CACHE_DICTION[user]
 	else:
 		print("Making a request for new data...")
 		results = api.user_timeline(user)
 		CACHE_DICTION[user] = results
-		f = open(CAHCE_FNAME, "w")
+		f = open(CACHE_FNAME, "w")
 		f.write(json.dumps(CACHE_DICTION))
 		f.close()
 		return CACHE_DICTION[user]
@@ -80,7 +80,7 @@ umich_tweets = get_user_tweets('@umich')
 
 ## Task 2 - Creating database and loading data into database
 
-conn = sqlite3.connect('tweets.sqlite')
+conn = sqlite3.connect('206_APIsAndDBs.sqlite')
 cur = conn.cursor()
 
 ## You should load into the Users table:
@@ -90,10 +90,13 @@ cur = conn.cursor()
 # mentioned in the umich timeline, that Twitter user's info should be 
 # in the Users table, etc.
 cur.execute('DROP TABLE IF EXISTS Users')
-cur.execute('CREATE TABLE Users (user_id TEXT PRIMARY KEY, screen_name TEXT, num_favs NUMBER, description TEXT')
+cur.execute('CREATE TABLE Users (user_id TEXT PRIMARY KEY, screen_name TEXT, num_favs NUMBER, description TEXT)')
 for tweet in umich_tweets:
 	tup = tweet["user"]["id"], tweet["user"]["screen_name"], tweet["user"]["favourites_count"], tweet["user"]["description"]
-	cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup)
+	cur.execute('INSERT OR IGNORE INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup)
+	for mention in tweet["entities"]["user_mentions"]:
+		men = mention["id"], mention["screen_name"]
+		cur.execute('INSERT OR IGNORE INTO Users (user_id, screen_name) VALUES (?, ?)', men)
 conn.commit()
 
 ## You should load into the Tweets table: 
@@ -102,10 +105,10 @@ conn.commit()
 # NOTE: Be careful that you have the correct user ID reference in 
 # the user_id column! See below hints.
 cur.execute('DROP TABLE IF EXISTS Tweets')
-cur.execute('CREATE TABLE Tweets (tweet_id TEXT PRIMARY KEY, text TEXT, user_posted TEXT FOREIGN KEY, time_posted TIMESTAMP, retweets NUMBER')
+cur.execute('CREATE TABLE Tweets (tweet_id TEXT PRIMARY KEY, text TEXT, user_posted TEXT, time_posted TIMESTAMP, retweets NUMBER)')
 for tweet in umich_tweets:
 	tup = tweet["id"], tweet["text"], tweet["user"]["id"], tweet["created_at"], tweet["retweet_count"] 
-	cur.execute('INSERT INTO Tweets (tweet_id, text, user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tup)
+	cur.execute('INSERT OR IGNORE INTO Tweets (tweet_id, text, user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tup)
 conn.commit()
 
 ## HINT: There's a Tweepy method to get user info, so when you have a 
@@ -149,7 +152,7 @@ retweets = cur.fetchall()
 # the users who have favorited more than 500 tweets. Access all those 
 # strings, and save them in a variable called favorites, 
 # which should ultimately be a list of strings.
-cur.execute("SELECT descriptions FROM Users WHERE num_favs > 500")
+cur.execute("SELECT description FROM Users WHERE num_favs > 500")
 favorites = cur.fetchall()
 
 
