@@ -159,14 +159,17 @@ favorites = cur.fetchall()
 # Make a query using an INNER JOIN to get a list of tuples with 2 
 # elements in each tuple: the user screenname and the text of the 
 # tweet. Save the resulting list of tuples in a variable called joined_data2.
-joined_data = True
+cur.execute("SELECT screen_name FROM Users INNER JOIN Tweets ON Users.screen_name = Tweets.text")
+joined_data = cur.fetchall()
 
 # Make a query using an INNER JOIN to get a list of tuples with 2 
 # elements in each tuple: the user screenname and the text of the 
 # tweet in descending order based on retweets. Save the resulting 
 # list of tuples in a variable called joined_data2.
-
-joined_data2 = True
+# cur.execute("SELECT screen_name FROM Users INNER JOIN Tweets ON Users.screen_name = Tweets.text ORDER BY Tweets.retweets DESC")
+cur.execute("SELECT Users.user_id, Tweets.tweet_id FROM Users INNER JOIN Tweets ON Users.screen_name = Tweets.text ORDER BY Tweets.retweets DESC")
+joined_data2 = cur.fetchall()
+print(joined_data2)
 
 
 ### IMPORTANT: MAKE SURE TO CLOSE YOUR DATABASE CONNECTION AT THE END 
