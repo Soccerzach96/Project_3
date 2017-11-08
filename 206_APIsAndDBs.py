@@ -138,7 +138,9 @@ users_info = cur.fetchall()
 # this easier to complete! 
 cur.execute("SELECT screen_name FROM Users")
 s_names = cur.fetchall()
-screen_names = [s for s in s_names]
+screen_names = []
+for s in s_names:
+	screen_names.append(s[0])
 
 
 # Make a query to select all of the tweets (full rows of tweet information)
@@ -153,24 +155,24 @@ retweets = cur.fetchall()
 # strings, and save them in a variable called favorites, 
 # which should ultimately be a list of strings.
 cur.execute("SELECT description FROM Users WHERE num_favs > 500")
-favorites = cur.fetchall()
+favs = cur.fetchall()
+favorites = []
+for fav in favs:
+	favorites.append(fav[0])
 
 
 # Make a query using an INNER JOIN to get a list of tuples with 2 
 # elements in each tuple: the user screenname and the text of the 
 # tweet. Save the resulting list of tuples in a variable called joined_data2.
-cur.execute("SELECT screen_name FROM Users INNER JOIN Tweets ON Users.screen_name = Tweets.text")
+cur.execute("SELECT Users.screen_name, Tweets.text FROM Users JOIN Tweets ON Users.user_id = Tweets.user_posted")
 joined_data = cur.fetchall()
 
 # Make a query using an INNER JOIN to get a list of tuples with 2 
 # elements in each tuple: the user screenname and the text of the 
 # tweet in descending order based on retweets. Save the resulting 
 # list of tuples in a variable called joined_data2.
-# cur.execute("SELECT screen_name FROM Users INNER JOIN Tweets ON Users.screen_name = Tweets.text ORDER BY Tweets.retweets DESC")
-cur.execute("SELECT Users.user_id, Tweets.tweet_id FROM Users INNER JOIN Tweets ON Users.screen_name = Tweets.text ORDER BY Tweets.retweets DESC")
+cur.execute("SELECT Users.screen_name, Tweets.text FROM Users JOIN Tweets ON Users.user_id = Tweets.user_posted ORDER BY Tweets.retweets DESC")
 joined_data2 = cur.fetchall()
-print(joined_data2)
-
 
 ### IMPORTANT: MAKE SURE TO CLOSE YOUR DATABASE CONNECTION AT THE END 
 ### OF THE FILE HERE SO YOU DO NOT LOCK YOUR DATABASE (it's fixable, 
